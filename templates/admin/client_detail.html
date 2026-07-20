@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}{{ summary.user.name }} - TAVOGYM{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <a href="{{ url_for('admin_clients') }}" class="back-link">← Clientes</a>
+    <h1>{{ summary.user.name }}</h1>
+    <p class="text-muted">@{{ summary.user.username }}{% if summary.user.phone %} · {{ summary.user.phone }}{% endif %}</p>
+</div>
+
+<div class="stats-grid stats-grid-2">
+    <div class="stat-card {% if summary.unpaid_months_count > 0 %}stat-warning{% else %}stat-success{% endif %}">
+        <span class="stat-value">{{ summary.unpaid_months_count }}</span>
+        <span class="stat-label">Cuotas pendientes</span>
+        {% if summary.unpaid_months_total > 0 %}
+        <span class="stat-sub">${{ "{:,.0f}".format(summary.unpaid_months_total) }}</span>
+        {% endif %}
+    </div>
+    <div class="stat-card {% if summary.unpaid_supplements_count > 0 %}stat-danger{% else %}stat-success{% endif %}">
+        <span class="stat-value">{{ summary.unpaid_supplements_count }}</span>
+        <span class="stat-label">Suplementos pendientes</span>
+        {% if summary.unpaid_supplements_total > 0 %}
+        <span class="stat-sub">${{ "{:,.0f}".format(summary.unpaid_supplements_total) }}</span>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Cuotas mensuales -->
+<div class="section">
+    <div class="section-header">
+        <h2>Cuotas mensuales</h2>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin_add_fee', user_id=summary.user.id) }}" class="inline-form">
+        <select name="month" class="form-select">
+            {% for m in range(1, 13) %}
+            <option value="{{ m }}">{{ month_names[m] }}</option>
+            {% endfor %}
+        </select>
+        <input type="number" name="year" value="2026" min="2024" max="2030" class="form-input-sm">
+        <input type="number" name="amount" value="{{ monthly_fee_default }}" step="100" class="form-input-sm" placeholder="Monto">
+        <button type="submit" class="btn btn-sm btn-outline">+ Cuota</button>
+    </form>
+
+    {% if summary.monthly_fees %}
+    <div class="payment-list">
+        {% for fee in summary.monthly_fees %}
+        <div class="payment-item {% if fee.paid %}paid{% else %}unpaid{% endif %}">
+            <div class="payment-info">
+                <strong>{{ month_names[fee.month] }} {{ fee.year }}</strong>
+                <span>${{ "{:,.0f}".format(fee.amount) }}</span>
+            </div>
+            {% if fee.paid %}
+            <span class="badge badge-success">Pagado</span>
+            {% else %}
+            <form method="POST" action="{{ url_for('admin_pay_fee', user_id=summary.user.id, fee_id=fee.id) }}">
+                <button type="submit" class="btn btn-sm btn-success">Marcar pagado</button>
+            </form>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted">Sin cuotas registradas.</p>
+    {% endif %}
+</div>
+
+<!-- Suplementos -->
+<div class="section">
+    <div class="section-header">
+        <h2>Suplementos</h2>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin_add_supplement', user_id=summary.user.id) }}" class="form-card form-compact">
+        <div class="form-row">
+            <input type="text" name="product_name" placeholder="Producto (ej: Proteína 1kg)" required class="form-input-flex">
+            <input type="number" name="amount" placeholder="Monto" step="100" required class="form-input-sm">
+            <button type="submit" class="btn btn-sm btn-primary">Agregar</button>
+        </div>
+    </form>
+
+    {% if summary.supplements %}
+    <div class="payment-list">
+        {% for sup in summary.supplements %}
+        <div class="payment-item {% if sup.paid %}paid{% else %}unpaid{% endif %}">
+            <div class="payment-info">
+                <strong>{{ sup.product_name }}</strong>
+                <span>${{ "{:,.0f}".format(sup.amount) }} · {{ sup.created_at[:10] }}</span>
+            </div>
+            {% if sup.paid %}
+            <span class="badge badge-success">Pagado</span>
+            {% else %}
+            <form method="POST" action="{{ url_for('admin_pay_supplement', user_id=summary.user.id, debt_id=sup.id) }}">
+                <button type="submit" class="btn btn-sm btn-success">Marcar pagado</button>
+            </form>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted">Sin suplementos registrados.</p>
+    {% endif %}
+</div>
+
+<div class="section">
+    <a href="{{ url_for('admin_notify') }}?client={{ summary.user.id }}" class="btn btn-outline btn-block">
+        📢 Enviar aviso a {{ summary.user.name }}
+    </a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.querySelector('select[name="month"]').value = new Date().getMonth() + 1;
+    document.querySelector('input[name="year"]').value = new Date().getFullYear();
+</script>
+{% endblock %}
