@@ -57,7 +57,8 @@ class _ConnectionWrapper:
             cur = self._conn.cursor()
             cur.execute(sql, params)
             return _CursorWrapper(cur, True)
-        return self._conn.execute(sql, params)
+        cur = self._conn.execute(sql, params)
+        return _CursorWrapper(cur, False)
 
     def commit(self):
         self._conn.commit()
@@ -273,7 +274,7 @@ def row_to_dict(row):
 def get_user_by_id(user_id):
     with get_db() as conn:
         row = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
-    return row
+    return row_to_dict(row) if row else None
 
 
 def get_user_by_username(username):
@@ -281,7 +282,7 @@ def get_user_by_username(username):
         row = conn.execute(
             "SELECT * FROM users WHERE username = ?", (username,)
         ).fetchone()
-    return row
+    return row_to_dict(row) if row else None
 
 
 def verify_password(user, password):
@@ -381,7 +382,8 @@ def create_client(username, password, name, phone):
                 """,
                 (username, generate_password_hash(password), name, phone),
             )
-            user_id = conn.execute("SELECT last_insert_rowid() AS id").fetchone()["id"]
+            row = conn.execute("SELECT last_insert_rowid() AS id").fetchone()
+            user_id = row["id"]
 
         now = datetime.now()
         ignore_sql = (
