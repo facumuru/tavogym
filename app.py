@@ -298,7 +298,16 @@ def admin_gym_status():
 
         subs = db.get_all_push_subscriptions()
         sent = send_push_to_subscriptions(subs, title, message, "/cliente")
-        flash(f"Estado publicado. Notificaciones enviadas: {sent}.", "success")
+        if not vapid_configured():
+            flash("Estado publicado. Push NO configurado: agregá VAPID keys en Render.", "error")
+        elif sent == 0:
+            flash(
+                f"Estado publicado en la app. Push a 0 celulares ({len(subs)} suscriptores). "
+                "Los clientes deben tocar 'Activar notificaciones' en su celular.",
+                "error",
+            )
+        else:
+            flash(f"Estado publicado. Push enviados a {sent} celular(es).", "success")
         return redirect(url_for("admin_gym_status"))
 
     gym_status = db.get_current_gym_status()
@@ -330,7 +339,16 @@ def admin_notify():
             subs = db.get_client_push_subscriptions(user_id)
             sent = send_push_to_subscriptions(subs, title, body, "/cliente")
 
-        flash(f"Notificación enviada. Push entregados: {sent}.", "success")
+        if not vapid_configured():
+            flash("Aviso guardado en la app. Push NO configurado: agregá VAPID keys en Render.", "error")
+        elif sent == 0:
+            flash(
+                f"Aviso guardado en la app. Push a 0 celulares ({len(subs)} suscriptores). "
+                "El cliente debe activar notificaciones en su celular.",
+                "error",
+            )
+        else:
+            flash(f"Aviso enviado. Push entregados a {sent} celular(es).", "success")
         return redirect(url_for("admin_notify"))
 
     return render_template("admin/notify.html", clients=clients)
