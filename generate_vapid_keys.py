@@ -1,37 +1,39 @@
 """Genera claves VAPID para notificaciones push web."""
 import os
 
-try:
-    from py_vapid import Vapid02 as Vapid
-except ImportError:
-    print("Instalá dependencias: pip install py-vapid")
-    raise
+from py_vapid import Vapid02 as Vapid
+from py_vapid.utils import b64urlencode
 
 vapid = Vapid()
 vapid.generate_keys()
 
-private_pem = vapid.private_pem().decode() if isinstance(vapid.private_pem(), bytes) else vapid.private_pem()
-public_b64 = vapid.public_key
+private_pem = vapid.private_pem()
+if isinstance(private_pem, bytes):
+    private_pem = private_pem.decode()
+
+numbers = vapid.public_key.public_numbers()
+public_raw = b"\x04" + numbers.x.to_bytes(32, "big") + numbers.y.to_bytes(32, "big")
+public_b64 = b64urlencode(public_raw)
 
 print("=" * 50)
 print("Claves VAPID generadas para TAVOGYM")
 print("=" * 50)
 print()
-print("Agregá esto a tu archivo .env:")
+print("Agregá esto en Render -> Environment:")
 print()
-print(f"VAPID_PRIVATE_KEY={private_pem.strip()}")
 print(f"VAPID_PUBLIC_KEY={public_b64}")
+print()
+print("VAPID_PRIVATE_KEY=(una linea, saltos como \\n):")
+print(private_pem.strip().replace("\n", "\\n"))
+print()
+print("VAPID_CLAIM_EMAIL=mailto:admin@tavogym.com")
 print()
 print("=" * 50)
 
 env_path = os.path.join(os.path.dirname(__file__), ".env")
-if not os.path.exists(env_path):
-    with open(env_path, "w", encoding="utf-8") as f:
-        f.write(f"SECRET_KEY=tavogym-produccion-{os.urandom(16).hex()}\n")
-        f.write(f"VAPID_PRIVATE_KEY={private_pem.strip()}\n")
-        f.write(f"VAPID_PUBLIC_KEY={public_b64}\n")
-        f.write("VAPID_CLAIM_EMAIL=mailto:admin@tavogym.com\n")
-    print(f"Archivo .env creado en: {env_path}")
-else:
-    print("Para Render.com, pegá las claves en Environment Variables.")
-    print("Si la clave privada tiene saltos de linea, usá \\n en Render.")
+with open(env_path, "w", encoding="utf-8") as f:
+    f.write(f"SECRET_KEY=tavogym-produccion-{os.urandom(16).hex()}\n")
+    f.write(f"VAPID_PRIVATE_KEY={private_pem.strip()}\n")
+    f.write(f"VAPID_PUBLIC_KEY={public_b64}\n")
+    f.write("VAPID_CLAIM_EMAIL=mailto:admin@tavogym.com\n")
+print(f"Archivo .env actualizado: {env_path}")
