@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Panel Admin - TAVOGYM{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Panel de control</h1>
+    <p>Bienvenido, {{ current_user.name }}</p>
+</div>
+
+{% if gym_status %}
+<div class="gym-status-banner status-{{ gym_status.status }}">
+    <span class="status-icon">
+        {% if gym_status.status == 'open' %}✅{% elif gym_status.status == 'closed' %}🔴{% else %}⏰{% endif %}
+    </span>
+    <div>
+        <strong>Estado actual: {{ status_labels[gym_status.status] }}</strong>
+        <p>{{ gym_status.message }}</p>
+    </div>
+    <a href="{{ url_for('admin_gym_status') }}" class="btn btn-sm btn-outline">Cambiar</a>
+</div>
+{% else %}
+<div class="card card-highlight">
+    <p>Todavía no publicaste el estado del gym hoy.</p>
+    <a href="{{ url_for('admin_gym_status') }}" class="btn btn-primary">Publicar estado</a>
+</div>
+{% endif %}
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <span class="stat-value">{{ stats.total_clients }}</span>
+        <span class="stat-label">Clientes activos</span>
+    </div>
+    <div class="stat-card stat-warning">
+        <span class="stat-value">{{ stats.clients_with_debt }}</span>
+        <span class="stat-label">Con deuda</span>
+    </div>
+    <div class="stat-card stat-danger">
+        <span class="stat-value">${{ "{:,.0f}".format(stats.total_debt) }}</span>
+        <span class="stat-label">Deuda total</span>
+    </div>
+</div>
+
+<div class="section">
+    <div class="section-header">
+        <h2>Acciones rápidas</h2>
+    </div>
+    <div class="quick-actions">
+        <a href="{{ url_for('admin_new_client') }}" class="action-card">
+            <span class="action-icon">➕</span>
+            <span>Nuevo cliente</span>
+        </a>
+        <a href="{{ url_for('admin_gym_status') }}" class="action-card">
+            <span class="action-icon">🏋️</span>
+            <span>Estado del gym</span>
+        </a>
+        <a href="{{ url_for('admin_notify') }}" class="action-card">
+            <span class="action-icon">📢</span>
+            <span>Enviar aviso</span>
+        </a>
+        <a href="{{ url_for('admin_debtors') }}" class="action-card">
+            <span class="action-icon">💰</span>
+            <span>Ver deudores</span>
+        </a>
+    </div>
+</div>
+
+<div class="section">
+    <div class="section-header">
+        <h2>Clientes recientes</h2>
+        <a href="{{ url_for('admin_clients') }}" class="link">Ver todos</a>
+    </div>
+    {% if clients %}
+    <div class="client-list">
+        {% for client in clients %}
+        <a href="{{ url_for('admin_client_detail', user_id=client.id) }}" class="client-item">
+            <div class="client-avatar">{{ client.name[0]|upper }}</div>
+            <div class="client-info">
+                <strong>{{ client.name }}</strong>
+                <span class="text-muted">@{{ client.username }}</span>
+            </div>
+            {% if client.unpaid_months > 0 or client.supplement_debt > 0 %}
+            <span class="badge badge-warning">Debe</span>
+            {% else %}
+            <span class="badge badge-success">Al día</span>
+            {% endif %}
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No hay clientes registrados todavía.</p>
+        <a href="{{ url_for('admin_new_client') }}" class="btn btn-primary">Registrar primer cliente</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
