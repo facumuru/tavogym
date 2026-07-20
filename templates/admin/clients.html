@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Clientes - TAVOGYM{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Clientes</h1>
+    <a href="{{ url_for('admin_new_client') }}" class="btn btn-primary btn-sm">+ Nuevo</a>
+</div>
+
+{% if clients %}
+<div class="client-list">
+    {% for client in clients %}
+    <a href="{{ url_for('admin_client_detail', user_id=client.id) }}" class="client-item">
+        <div class="client-avatar">{{ client.name[0]|upper }}</div>
+        <div class="client-info">
+            <strong>{{ client.name }}</strong>
+            <span class="text-muted">@{{ client.username }}{% if client.phone %} · {{ client.phone }}{% endif %}</span>
+        </div>
+        <div class="client-debt">
+            {% if client.unpaid_months > 0 %}
+            <span class="badge badge-warning">{{ client.unpaid_months }} cuota(s)</span>
+            {% endif %}
+            {% if client.supplement_debt > 0 %}
+            <span class="badge badge-danger">${{ "{:,.0f}".format(client.supplement_debt) }}</span>
+            {% endif %}
+            {% if client.unpaid_months == 0 and client.supplement_debt == 0 %}
+            <span class="badge badge-success">Al día</span>
+            {% endif %}
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <p>No hay clientes registrados.</p>
+    <a href="{{ url_for('admin_new_client') }}" class="btn btn-primary">Registrar cliente</a>
+</div>
+{% endif %}
+{% endblock %}
