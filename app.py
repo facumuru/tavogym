@@ -43,11 +43,13 @@ login_manager.login_view = "login"
 
 class User(UserMixin):
     def __init__(self, data):
+        if not isinstance(data, dict):
+            data = dict(data)
         self.id = data["id"]
         self.username = data["username"]
         self.name = data["name"]
         self.role = data["role"]
-        self.phone = data.get("phone", "")
+        self.phone = data.get("phone") or ""
 
 
 @login_manager.user_loader
