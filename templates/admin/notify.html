@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Enviar Aviso - TAVOGYM{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Enviar aviso</h1>
+    <p>Mandá una notificación directa al celular de tus clientes.</p>
+</div>
+
+<form method="POST" class="form-card">
+    <div class="form-group">
+        <label for="target">Destinatario</label>
+        <select id="target" name="target">
+            <option value="all">📢 Todos los clientes</option>
+            {% for client in clients %}
+            <option value="{{ client.id }}" {% if request.args.get('client')|int == client.id %}selected{% endif %}>
+                {{ client.name }} (@{{ client.username }})
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="title">Título *</label>
+        <input type="text" id="title" name="title" placeholder="Ej: Recordatorio de pago" required maxlength="100">
+    </div>
+
+    <div class="form-group">
+        <label for="body">Mensaje *</label>
+        <textarea id="body" name="body" rows="4" placeholder="Escribí el mensaje..." required maxlength="500"></textarea>
+    </div>
+
+    <div class="quick-messages">
+        <p class="text-muted">Mensajes rápidos:</p>
+        <button type="button" class="btn btn-sm btn-outline quick-msg" data-title="Recordatorio de cuota" data-body="Hola! Te recuerdo que tenés la cuota del mes pendiente. Cuando puedas, acercate a regularizar. ¡Gracias!">
+            Recordatorio cuota
+        </button>
+        <button type="button" class="btn btn-sm btn-outline quick-msg" data-title="Suplemento disponible" data-body="Tu suplemento ya está disponible para retirar en el gym.">
+            Suplemento listo
+        </button>
+        <button type="button" class="btn btn-sm btn-outline quick-msg" data-title="Horario especial" data-body="Este finde el horario del gym es de 9 a 13hs.">
+            Horario especial
+        </button>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block">🔔 Enviar notificación</button>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.querySelectorAll('.quick-msg').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('title').value = btn.dataset.title;
+            document.getElementById('body').value = btn.dataset.body;
+        });
+    });
+</script>
+{% endblock %}
