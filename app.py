@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 from functools import wraps
+from pathlib import Path
 
 from flask import (
     Flask,
@@ -17,9 +18,23 @@ from flask_login import LoginManager, UserMixin, current_user, login_user, logou
 import database as db
 from config import MONTHLY_FEE_DEFAULT, SECRET_KEY, VAPID_PUBLIC_KEY
 from push_service import send_push_to_subscriptions, vapid_configured
+from whitenoise import WhiteNoise
 
-app = Flask(__name__)
+BASE_DIR = Path(__file__).resolve().parent
+
+app = Flask(
+    __name__,
+    static_folder=str(BASE_DIR / "static"),
+    static_url_path="/static",
+    template_folder=str(BASE_DIR / "templates"),
+)
 app.secret_key = SECRET_KEY
+app.wsgi_app = WhiteNoise(
+    app.wsgi_app,
+    root=str(BASE_DIR / "static"),
+    prefix="/static/",
+    index_file=False,
+)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
