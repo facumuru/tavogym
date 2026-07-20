@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Estado del Gym - TAVOGYM{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Estado del gym</h1>
+    <p>Informá a todos los clientes si abrís, cerrás o llegás tarde.</p>
+</div>
+
+{% if gym_status %}
+<div class="gym-status-banner status-{{ gym_status.status }} large">
+    <span class="status-icon">
+        {% if gym_status.status == 'open' %}✅{% elif gym_status.status == 'closed' %}🔴{% else %}⏰{% endif %}
+    </span>
+    <div>
+        <strong>Último estado: {{ status_labels[gym_status.status] }}</strong>
+        <p>{{ gym_status.message }}</p>
+        <small class="text-muted">{{ gym_status.created_at }}</small>
+    </div>
+</div>
+{% endif %}
+
+<form method="POST" class="form-card">
+    <h3>Publicar nuevo estado</h3>
+    <p class="text-muted">Todos los clientes recibirán una notificación en el celular.</p>
+
+    <div class="status-options">
+        <label class="status-option">
+            <input type="radio" name="status" value="open" checked>
+            <span class="status-card status-open">
+                <span class="status-emoji">✅</span>
+                <strong>Abierto</strong>
+                <small>El gym está funcionando</small>
+            </span>
+        </label>
+        <label class="status-option">
+            <input type="radio" name="status" value="late">
+            <span class="status-card status-late">
+                <span class="status-emoji">⏰</span>
+                <strong>Llego tarde</strong>
+                <small>Aviso de demora</small>
+            </span>
+        </label>
+        <label class="status-option">
+            <input type="radio" name="status" value="closed">
+            <span class="status-card status-closed">
+                <span class="status-emoji">🔴</span>
+                <strong>Cerrado</strong>
+                <small>Hoy no abre</small>
+            </span>
+        </label>
+    </div>
+
+    <div class="form-group">
+        <label for="message">Mensaje (opcional)</label>
+        <textarea id="message" name="message" rows="3" placeholder="Ej: Hoy abro a las 18hs por el partido..."></textarea>
+        <small class="form-hint">Si lo dejás vacío, se usa un mensaje predeterminado.</small>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block">📢 Publicar y notificar a todos</button>
+</form>
+{% endblock %}
