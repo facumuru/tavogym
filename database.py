@@ -10,6 +10,7 @@ from config import (
     DATABASE,
     DATABASE_URL,
     MONTHLY_FEE_DEFAULT,
+    RESET_ADMIN,
 )
 
 USE_POSTGRES = bool(DATABASE_URL)
@@ -242,6 +243,7 @@ def init_db():
         admin = conn.execute(
             "SELECT id FROM users WHERE username = ?", (ADMIN_USERNAME,)
         ).fetchone()
+        password_hash = generate_password_hash(ADMIN_PASSWORD)
         if not admin:
             conn.execute(
                 """
@@ -250,11 +252,19 @@ def init_db():
                 """,
                 (
                     ADMIN_USERNAME,
-                    generate_password_hash(ADMIN_PASSWORD),
+                    password_hash,
                     "Tavo - Profesor",
                     "",
                     "admin",
                 ),
+            )
+        elif RESET_ADMIN:
+            conn.execute(
+                """
+                UPDATE users SET password_hash = ?
+                WHERE username = ? AND role = 'admin'
+                """,
+                (password_hash, ADMIN_USERNAME),
             )
 
 
