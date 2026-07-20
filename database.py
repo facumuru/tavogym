@@ -601,10 +601,15 @@ def get_admin_stats():
             "SELECT COALESCE(SUM(amount), 0) AS t FROM supplement_debts WHERE paid = 0"
         ).fetchone()["t"]
 
+        push_subscribers = conn.execute(
+            "SELECT COUNT(*) AS c FROM push_subscriptions"
+        ).fetchone()["c"]
+
     return {
         "total_clients": total_clients,
         "clients_with_debt": clients_with_debt,
         "total_monthly_debt": total_monthly_debt,
         "total_supplement_debt": total_supplement_debt,
         "total_debt": total_monthly_debt + total_supplement_debt,
+        "push_subscribers": push_subscribers,
     }
