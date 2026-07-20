@@ -43,10 +43,12 @@ async function subscribeToPush() {
     });
 
     if (response.ok) {
-        const prompt = document.getElementById('push-prompt');
-        if (prompt) {
-            prompt.innerHTML = '<p>✅ Notificaciones activadas. Vas a recibir avisos del gym.</p>';
-        }
+        document.querySelectorAll('#push-prompt, #global-push-prompt').forEach((el) => {
+            if (el) {
+                el.innerHTML = '<p>✅ Notificaciones activadas. Vas a recibir avisos del gym.</p>';
+                el.style.display = 'block';
+            }
+        });
         return true;
     }
 
@@ -54,15 +56,23 @@ async function subscribeToPush() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('enable-push-btn');
-    if (btn) {
+    document.querySelectorAll('#enable-push-btn, #global-enable-push-btn').forEach((btn) => {
         btn.addEventListener('click', subscribeToPush);
+    });
+
+    if (!window.VAPID_PUBLIC_KEY) return;
+
+    if (Notification.permission === 'granted') {
+        subscribeToPush();
+        const banner = document.getElementById('global-push-prompt');
+        if (banner) banner.style.display = 'none';
+        return;
     }
 
-    if (window.VAPID_PUBLIC_KEY && Notification.permission === 'default') {
-        setTimeout(() => {
-            const prompt = document.getElementById('push-prompt');
-            if (prompt) prompt.style.display = 'block';
-        }, 2000);
+    if (Notification.permission === 'denied') {
+        const banner = document.getElementById('global-push-prompt');
+        if (banner) {
+            banner.innerHTML = '<p>⚠️ Tenés las notificaciones bloqueadas. Activálas en ajustes del navegador/celular.</p>';
+        }
     }
 });
