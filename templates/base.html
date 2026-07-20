@@ -75,6 +75,18 @@
         {% endwith %}
 
         {% block content %}{% endblock %}
+
+        {% if current_user.is_authenticated and push_enabled and vapid_public_key %}
+        <div class="card card-info push-banner" id="global-push-prompt">
+            <h3>🔔 Activá las notificaciones</h3>
+            <p>Recibí avisos del gym en tu celular aunque no tengas la app abierta.</p>
+            <button type="button" class="btn btn-primary btn-sm" id="global-enable-push-btn">Activar notificaciones</button>
+        </div>
+        {% elif current_user.is_authenticated and not push_enabled %}
+        <div class="card card-info">
+            <p>⚠️ Push no configurado en el servidor. Agregá claves VAPID en Render.</p>
+        </div>
+        {% endif %}
     </main>
 
     {% if current_user.is_authenticated and vapid_public_key %}
