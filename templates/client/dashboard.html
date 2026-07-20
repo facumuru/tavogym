@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Mi Gym - TAVOGYM{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Hola, {{ current_user.name.split()[0] }} 👋</h1>
+</div>
+
+{% if gym_status %}
+<div class="gym-status-banner status-{{ gym_status.status }} large">
+    <span class="status-icon">
+        {% if gym_status.status == 'open' %}✅{% elif gym_status.status == 'closed' %}🔴{% else %}⏰{% endif %}
+    </span>
+    <div>
+        <strong>{{ status_labels[gym_status.status] }}</strong>
+        <p>{{ gym_status.message }}</p>
+        <small class="text-muted">Actualizado: {{ gym_status.created_at[:16] }}</small>
+    </div>
+</div>
+{% endif %}
+
+{% set total_debt = summary.unpaid_months_total + summary.unpaid_supplements_total %}
+<div class="debt-summary {% if total_debt > 0 %}has-debt{% else %}no-debt{% endif %}">
+    {% if total_debt > 0 %}
+    <div class="debt-amount">
+        <span class="debt-label">Saldo pendiente</span>
+        <span class="debt-value">${{ "{:,.0f}".format(total_debt) }}</span>
+    </div>
+    <div class="debt-breakdown">
+        {% if summary.unpaid_months_count > 0 %}
+        <span>{{ summary.unpaid_months_count }} cuota(s): ${{ "{:,.0f}".format(summary.unpaid_months_total) }}</span>
+        {% endif %}
+        {% if summary.unpaid_supplements_count > 0 %}
+        <span>{{ summary.unpaid_supplements_count }} suplemento(s): ${{ "{:,.0f}".format(summary.unpaid_supplements_total) }}</span>
+        {% endif %}
+    </div>
+    <a href="{{ url_for('client_payments') }}" class="btn btn-outline btn-sm">Ver detalle</a>
+    {% else %}
+    <span class="debt-icon">✅</span>
+    <strong>¡Estás al día!</strong>
+    <p>No tenés pagos pendientes.</p>
+    {% endif %}
+</div>
+
+{% if push_enabled and vapid_public_key %}
+<div class="card card-info" id="push-prompt">
+    <h3>🔔 Activá las notificaciones</h3>
+    <p>Recibí avisos cuando Tavo publique el estado del gym o registre tus pagos.</p>
+    <button type="button" class="btn btn-primary btn-sm" id="enable-push-btn">Activar notificaciones</button>
+</div>
+{% endif %}
+
+<div class="section">
+    <div class="section-header">
+        <h2>Últimos avisos</h2>
+        <a href="{{ url_for('client_notifications') }}" class="link">Ver todos</a>
+    </div>
+    {% if notifications %}
+    <div class="notification-list">
+        {% for notif in notifications[:5] %}
+        <div class="notification-item {% if not notif.read %}unread{% endif %}">
+            <div class="notif-icon">
+                {% if notif.type == 'gym_status' %}🏋️
+                {% elif notif.type == 'payment' %}✅
+                {% elif notif.type == 'supplement' %}💊
+                {% else %}🔔{% endif %}
+            </div>
+            <div class="notif-content">
+                <strong>{{ notif.title }}</strong>
+                <p>{{ notif.body }}</p>
+                <small class="text-muted">{{ notif.created_at[:16] }}</small>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted">Todavía no tenés avisos.</p>
+    {% endif %}
+</div>
+{% endblock %}
