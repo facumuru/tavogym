@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f0f0f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+    <title>{% block title %}TAVOGYM{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    {% if current_user.is_authenticated %}
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="brand-icon">💪</span>
+            <span class="brand-text">TAVOGYM</span>
+        </div>
+        <div class="nav-user">
+            <span class="user-name">{{ current_user.name }}</span>
+            <a href="{{ url_for('logout') }}" class="btn-logout" title="Salir">Salir</a>
+        </div>
+    </nav>
+
+    {% if current_user.role == 'admin' %}
+    <div class="bottom-nav admin-nav">
+        <a href="{{ url_for('admin_dashboard') }}" class="nav-item {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+            <span class="nav-icon">📊</span>
+            <span>Inicio</span>
+        </a>
+        <a href="{{ url_for('admin_clients') }}" class="nav-item {% if 'admin_client' in request.endpoint|default('') %}active{% endif %}">
+            <span class="nav-icon">👥</span>
+            <span>Clientes</span>
+        </a>
+        <a href="{{ url_for('admin_gym_status') }}" class="nav-item {% if request.endpoint == 'admin_gym_status' %}active{% endif %}">
+            <span class="nav-icon">🏋️</span>
+            <span>Estado</span>
+        </a>
+        <a href="{{ url_for('admin_debtors') }}" class="nav-item {% if request.endpoint == 'admin_debtors' %}active{% endif %}">
+            <span class="nav-icon">💰</span>
+            <span>Deudas</span>
+        </a>
+        <a href="{{ url_for('admin_notify') }}" class="nav-item {% if request.endpoint == 'admin_notify' %}active{% endif %}">
+            <span class="nav-icon">🔔</span>
+            <span>Avisar</span>
+        </a>
+    </div>
+    {% else %}
+    <div class="bottom-nav">
+        <a href="{{ url_for('client_dashboard') }}" class="nav-item {% if request.endpoint == 'client_dashboard' %}active{% endif %}">
+            <span class="nav-icon">🏠</span>
+            <span>Inicio</span>
+        </a>
+        <a href="{{ url_for('client_payments') }}" class="nav-item {% if request.endpoint == 'client_payments' %}active{% endif %}">
+            <span class="nav-icon">💳</span>
+            <span>Pagos</span>
+        </a>
+        <a href="{{ url_for('client_notifications') }}" class="nav-item {% if request.endpoint == 'client_notifications' %}active{% endif %}">
+            <span class="nav-icon">🔔</span>
+            <span>Avisos</span>
+        </a>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <main class="main-content {% if current_user.is_authenticated %}with-nav{% endif %}">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    {% if current_user.is_authenticated and vapid_public_key %}
+    <script>
+        window.VAPID_PUBLIC_KEY = {{ vapid_public_key|tojson }};
+        window.PUSH_ENABLED = {{ push_enabled|tojson }};
+    </script>
+    <script src="/static/js/push.js"></script>
+    {% endif %}
+    <script src="/static/js/app.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
